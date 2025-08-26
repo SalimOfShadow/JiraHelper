@@ -7,3 +7,4 @@ lazy val root = (project in file("."))
     name := "JiraHelper"
   )
 libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.9.2"
+libraryDependencies += "com.typesafe" % "config" % "1.4.4"

@@ -1,3 +1,0 @@
-object JIIRa extends App {
-
-}
