@@ -1,7 +1,6 @@
 package OSActions
 
 import better.files._
-import better.files.File._
 import com.typesafe.config.Config
 
 sealed trait ActionResponse
@@ -10,7 +9,7 @@ final case class Failure(error: String) extends ActionResponse
 
 case class OSActions(userConfig: Config) {
 
-  def createDirectory(issueNumber: String): ActionResponse = {
+  private def createDirectory(issueNumber: String): ActionResponse = {
     try {
       val basePath: String = userConfig.getString("selectedPath")
 
@@ -27,7 +26,7 @@ case class OSActions(userConfig: Config) {
     }
   }
 
-  def createSQLFile(issueNumber: String): ActionResponse = {
+  private def createSQLFile(issueNumber: String): ActionResponse = {
     try {
       val sqlFile: File = (File(userConfig.getString("selectedPath")) / "Ticket Resources" / issueNumber / s"$issueNumber.sql")
         .createIfNotExists()
@@ -40,7 +39,7 @@ case class OSActions(userConfig: Config) {
     }
   }
 
-  def createNotesFile(issueNumber: String): ActionResponse = {
+  private def createNotesFile(issueNumber: String): ActionResponse = {
     try {
       val sqlFile: File = (File(userConfig.getString("selectedPath")) / "Ticket Resources" / issueNumber / s"$issueNumber.txt")
         .createIfNotExists()
@@ -53,4 +52,22 @@ case class OSActions(userConfig: Config) {
     }
   }
 
+  def createResources(issueNumber: String): ActionResponse = {
+    try {
+      val dirResponse = createDirectory(issueNumber)
+      val sqlResponse = createSQLFile(issueNumber)
+      val notesResponse = createNotesFile(issueNumber)
+      val errors = Seq(dirResponse, sqlResponse, notesResponse).collect {
+        case Failure(err) => err
+      }
+      if (errors.isEmpty) {
+        Success(s"All resources created successfully for issue $issueNumber")
+      } else {
+        Failure(errors.mkString("; "))
+      }
+    } catch {
+      case ex: Exception => Failure(s"Unexpected error creating resources: ${ex.getMessage}")
+    }
+
+  }
 }
